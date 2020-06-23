@@ -13,3 +13,5 @@ the script creates or updates existing files of a standard VestaCP installation 
 While it should work with version 0.9.8-24, nothing can be said about future versions.
 
 Please also take a look at https://github.com/ryanbrownell/DDNS-for-Vesta-CP if that is useful for you.
+
+Run vestacp-ddns-update.sh to install the DDNS upgrade.

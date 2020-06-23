@@ -5,6 +5,8 @@ Ryan Brownell, https://github.com/ryanbrownell, published under https://github.c
 of VestaCP with some extra features that provide DDNS besides the DNS support. Since then some security vulnerabilities 
 were found in VestaCP, so it is not adviced to use his version any longer in a production environment.
 
+Check out https://ryanbrownell.com/project/69 to see a live demonstration of DDNS in VestaCP.
+
 Comparing his VestaCP version with an standard VestaCP, I found that only a few files needed to be modified or added. So
 the script creates or updates existing files of a standard VestaCP installation to provide DDNS functionality.
 

@@ -1051,6 +1051,7 @@ randomString = function() {
 }
 EOF
 
+if [ ! -n "$(grep "ddns" /usr/local/vesta/web/js/pages/edit_dns_rec.js)" ]; then
 cat >> /usr/local/vesta/web/js/pages/edit_dns_rec.js <<'EOF'
 //
 //
@@ -1077,6 +1078,7 @@ updateDdnsUrl = function () {
     $('#ddns-url').val($('#ddns-base-url').val() + $('input[name=v_ddns_key]').val());
 };
 EOF
+fi
 
 if [ ! -n "$(grep DDNS /usr/local/vesta/web/add/dns/index.php)" ]; then
 ddnsnr=$(grep -n "empty($\_POST\['v\_val'" /usr/local/vesta/web/add/dns/index.php | awk -F: '{ print $1}')

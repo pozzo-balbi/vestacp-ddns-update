@@ -1011,7 +1011,7 @@ ddnsnr=$(grep -n 'dbuser) ' /usr/local/vesta/func/main.sh | awk -F: '{ print $1}
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/func/main.sh > /usr/local/vesta/func/main.sh2
 cat >> /usr/local/vesta/func/main.sh2 <<'EOF'
-                ddns_key)       is_key_format_valid "\$arg" "\$arg_name" ;;
+                ddns_key)       is_key_format_valid "$arg" "$arg_name" ;;
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/func/main.sh >> /usr/local/vesta/func/main.sh2
 mv -f /usr/local/vesta/func/main.sh2 /usr/local/vesta/func/main.sh

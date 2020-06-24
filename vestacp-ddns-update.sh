@@ -1003,7 +1003,7 @@ ddnsnr=$(grep -n 'DNS_RECORDS) ' /usr/local/vesta/func/main.sh | awk -F: '{ prin
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/func/main.sh > /usr/local/vesta/func/main.sh2
 cat >> /usr/local/vesta/func/main.sh2 <<'EOF'
-        DDNS_RECORDS) used=$(wc -l $USER_DATA\/ddns\.conf);;
+        DDNS_RECORDS) used=$(wc -l $USER_DATA/ddns.conf);;
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/func/main.sh >> /usr/local/vesta/func/main.sh2
 mv -f /usr/local/vesta/func/main.sh2 /usr/local/vesta/func/main.sh

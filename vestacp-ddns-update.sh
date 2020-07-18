@@ -998,7 +998,7 @@ is_ddns_unique() {
 }
 EOF
 
-if [ ! -n "$(grep "DDNS" /usr/local/vesta/func/main.sh)" ]; then
+if [ ! -n "$(grep DDNS /usr/local/vesta/func/main.sh)" ]; then
 ddnsnr=$(grep -n 'DNS_RECORDS) ' /usr/local/vesta/func/main.sh | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/func/main.sh > /usr/local/vesta/func/main.sh2
@@ -1017,6 +1017,7 @@ tail -n+"$ddnsnr2" /usr/local/vesta/func/main.sh >> /usr/local/vesta/func/main.s
 mv -f /usr/local/vesta/func/main.sh2 /usr/local/vesta/func/main.sh
 fi
 
+if [ ! -n "$(grep ddns /usr/local/vesta/web/css/styles.min.css)" ]; then
 cat >> /usr/local/vesta/web/css/styles.min.css <<'EOF'
 
 .ddns-address {
@@ -1025,7 +1026,9 @@ cat >> /usr/local/vesta/web/css/styles.min.css <<'EOF'
   height: auto;
 }
 EOF
+fi
 
+if [ ! -n "$(grep DDNS /usr/local/vesta/web/inc/i18n/en.php)" ]; then
 sed -i '/^);/d' /usr/local/vesta/web/inc/i18n/en.php
 
 cat >> /usr/local/vesta/web/inc/i18n/en.php <<'EOF'
@@ -1035,7 +1038,9 @@ cat >> /usr/local/vesta/web/inc/i18n/en.php <<'EOF'
     'DDNS Records' => 'DDNS Records',
 );
 EOF
+fi
 
+if [ ! -n "$(grep ddns /usr/local/vesta/web/js/pages/add_dns_rec.js)" ]; then
 cat >> /usr/local/vesta/web/js/pages/add_dns_rec.js <<'EOF'
 //
 // Generates a random API key
@@ -1050,6 +1055,7 @@ randomString = function() {
     document.v_add_dns_rec.v_ddns_key.value = randomstring;
 }
 EOF
+fi
 
 if [ ! -n "$(grep "ddns" /usr/local/vesta/web/js/pages/edit_dns_rec.js)" ]; then
 cat >> /usr/local/vesta/web/js/pages/edit_dns_rec.js <<'EOF'

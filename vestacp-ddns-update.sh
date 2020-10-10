@@ -22,12 +22,9 @@ cat > /usr/local/vesta/bin/v-add-ddns <<'EOF'
 # options: USER DOMAIN RECORD_ID KEY [ID]
 #
 # The function for adding DDNS functionality to a DNS record.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 domain=$2
@@ -35,17 +32,13 @@ record_id=$3
 key=$4
 ddns_key=$key
 id=''
-
 # Includes
 source $VESTA/func/main.sh
 source $VESTA/func/domain.sh
 source $VESTA/conf/vesta.conf
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '4' "$#" 'USER DOMAIN RECORD_ID KEY [ID]'
 is_format_valid 'user' 'domain' 'record_id' 'ddns_key'
 is_system_enabled "$DNS_SYSTEM" 'DNS_SYSTEM'
@@ -60,32 +53,24 @@ get_next_ddnsrecord
 is_format_valid 'id'
 is_object_new "ddns" 'ID' "$id"
 is_package_full 'DDNS_RECORDS'
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Generating timestamp
 time_n_date=$(date +'%T %F')
 time=$(echo "$time_n_date" |cut -f 1 -d \ )
 date=$(echo "$time_n_date" |cut -f 2 -d \ )
-
 # Adding ddns to ddns conf
 ddns_rec="ID='$id' DOMAIN='$domain' RECORD_ID='$record_id' KEY='$key'"
 ddns_rec="$ddns_rec TIME='$time' DATE='$date'"
 echo "$ddns_rec" >> $USER_DATA/ddns.conf
 chmod 660 $USER_DATA/ddns.conf
-
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 #Logging
 log_history "added ddns configuration for dns record $record_id on $domain"
 log_event "$OK" "$ARGUMENTS"
-
 exit
 EOF
 
@@ -97,23 +82,18 @@ cat > /usr/local/vesta/bin/v-authenticate-ddns-key <<'EOF'
 # options: USER ID KEY [FORMAT]
 #
 # The function for authenticating a DDNS key for a DNS record.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 id=$2
 key=$3
 format=${4-shell}
 valid='was not'
-
 # Includes
 source $VESTA/func/main.sh
 source $VESTA/conf/vesta.conf
-
 # JSON list function
 json_auth() {
     IFS=$'\n'
@@ -136,7 +116,6 @@ json_auth() {
     done < <(grep "ID='$id'" $USER_DATA/ddns.conf | grep "KEY='$key'")
     echo '}'
 }
-
 # SHELL authentication output function
 shell_auth() {
     IFS=$'\n'
@@ -147,7 +126,6 @@ shell_auth() {
         echo "$ID $DOMAIN $RECORD_ID true"
     done < <(grep "ID='$id'" $USER_DATA/ddns.conf | grep "KEY='$key'")
 }
-
 # PLAIN authentication output function
 plain_auth() {
     IFS=$'\n'
@@ -156,7 +134,6 @@ plain_auth() {
         echo -e "$ID\t$DOMAIN\t$RECORD_ID\ttrue"
     done < <(grep "ID='$id'" $USER_DATA/ddns.conf | grep "KEY='$key'")
 }
-
 # CSV authentication output function
 csv_auth() {
     IFS=$'\n'
@@ -166,26 +143,19 @@ csv_auth() {
         echo "$ID,$DOMAIN,$RECORD_ID,true"
     done < <(grep "ID='$id'" $USER_DATA/ddns.conf | grep "KEY='$key'")
 }
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '3' "$#" 'USER ID KEY [FORMAT]'
 # Intentionally do not validate any of this for security purposes.
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Authenticate DDNS key
 result=$(grep "ID='$id'" $USER_DATA/ddns.conf | grep "KEY='$key'" | wc -l)
 if [ "$result" == "1" ]; then
     valid="was";
 fi
-
 # Listing data
 case $format in
     json)   json_auth ;;
@@ -193,15 +163,12 @@ case $format in
     csv)    csv_auth ;;
     shell)  shell_auth |column -t ;;
 esac
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 #Logging
 log_history "attempted authentication for ddns $id $valid successful "
 log_event "$OK" "$ARGUMENTS"
-
 exit
 EOF
 
@@ -213,60 +180,43 @@ cat > /usr/local/vesta/bin/v-change-ddns-dns-record-id <<'EOF'
 # options: USER ID NEWID
 #
 # The function for changing the ddns dns record id.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 id=$2
 newid=$3
-
 # Includes
 source $VESTA/func/main.sh
 source $VESTA/func/domain.sh
 source $VESTA/conf/vesta.conf
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '3' "$#" 'USER ID NEWID'
 is_format_valid 'user' 'id' 'newid'
 is_system_enabled "$DNS_SYSTEM" 'DNS_SYSTEM'
 is_object_valid 'user' 'USER' "$user"
 is_object_unsuspended 'user' 'USER' "$user"
 is_object_valid "ddns" 'ID' "$id"
-
 # Get additional DDNS variables for verification
 domain=$($BIN/v-get-ddns $user $id plain | cut -f2 )
 record_id=$($BIN/v-get-ddns $user $id plain | cut -f3 )
-
 is_object_valid 'dns' 'DOMAIN' "$domain"
 is_object_unsuspended 'dns' 'DOMAIN' "$domain"
 is_object_valid "dns/$domain" 'ID' "$newid"
-
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Change ddns id and ddns dns record id
 sed -i "s/^ID='$id' DOMAIN='$domain' RECORD_ID='$record_id'/ID='$id' DOMAIN='$domain' RECORD_ID='$newid'/" $USER_DATA/ddns.conf
-
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 # Logging
 log_history "changed ddns dns record id for dns record $id (now $newid) on $domain"
 log_event "$OK" "$ARGUMENTS"
-
 exit
 EOF
 
@@ -278,31 +228,23 @@ cat > /usr/local/vesta/bin/v-change-ddns-key <<'EOF'
 # options: USER ID KEY
 #
 # The function for changing DDNS record key.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 id=$2
 key=$3
 ddns_key=$key
-
 # Includes
 source $VESTA/func/main.sh
 source $VESTA/conf/vesta.conf
-
 # Get associated DDNS variables
 domain=$($BIN/v-get-ddns $user $id plain | cut -f2 )
 record_id=$($BIN/v-get-ddns $user $id plain | cut -f3 )
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '3' "$#" 'USER ID KEY'
 is_format_valid 'user' 'id' 'ddns_key'
 is_system_enabled "$DNS_SYSTEM" 'DNS_SYSTEM'
@@ -310,35 +252,26 @@ is_object_valid 'user' 'USER' "$user"
 is_object_unsuspended 'user' 'USER' "$user"
 is_object_valid "ddns" 'ID' "$id"
 is_not_empty 'key' "$ddns_key"
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Deleting ddns from ddns conf
 sed -i "/^ID='$id'/d" $USER_DATA/ddns.conf
-
 # Generating timestamp
 time_n_date=$(date +'%T %F')
 time=$(echo "$time_n_date" |cut -f 1 -d \ )
 date=$(echo "$time_n_date" |cut -f 2 -d \ )
-
 # Adding ddns to ddns conf
 ddns_rec="ID='$id' DOMAIN='$domain' RECORD_ID='$record_id' KEY='$key'"
 ddns_rec="$ddns_rec TIME='$time' DATE='$date'"
 echo "$ddns_rec" >> $USER_DATA/ddns.conf
 chmod 660 $USER_DATA/ddns.conf
-
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 #Logging
 log_history "updated ddns key for dns record $record_id on $domain"
 log_event "$OK" "$ARGUMENTS"
-
 exit
 EOF
 
@@ -350,72 +283,53 @@ cat > /usr/local/vesta/bin/v-change-dns-record-by-ddns <<'EOF'
 # options: USER ID VALUE
 #
 # The function for changing DNS record with DDNS id.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 id=$2
 dvalue=$3
-
 # Includes
 source $VESTA/func/main.sh
 source $VESTA/func/domain.sh
 source $VESTA/conf/vesta.conf
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '3' "$#" 'USER ID VALUE'
 is_format_valid 'user' 'id' 'dvalue'
 is_system_enabled "$DNS_SYSTEM" 'DNS_SYSTEM'
 is_object_valid 'user' 'USER' "$user"
 is_object_unsuspended 'user' 'USER' "$user"
 is_object_valid "ddns" 'ID' "$id"
-
 # Get additional DDNS variables for verification
 domain=$($BIN/v-get-ddns $user $id plain | cut -f2 )
 record_id=$($BIN/v-get-ddns $user $id plain | cut -f3 )
-
 is_object_valid 'dns' 'DOMAIN' "$domain"
 is_object_unsuspended 'dns' 'DOMAIN' "$domain"
 is_object_valid "dns/$domain" 'ID' "$record_id"
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Get the current value of the record
 current_value=$( $BIN/v-list-dns-records $user $domain plain | awk -F"\t" '$1 == "'$record_id'" { print $5 }' )
-
 # Stop running if the current value is equal to the new value
 if [ "$current_value" == "$dvalue" ]; then
     echo "No changes to the DNS were needed"
     exit
 fi
-
 # Change DNS record
 $BIN/v-change-dns-record $user $domain $record_id $dvalue
-
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 # Restarting named
 $BIN/v-restart-dns
 check_result $? "DNS restart failed" >/dev/null
-
 # Logging
 log_history "ddns service successfully triggered dns record $record_id on $domain to change to $dvalue"
 log_event "$OK" "$ARGUMENTS"
-
 exit
 EOF
 
@@ -427,26 +341,19 @@ cat > /usr/local/vesta/bin/v-delete-ddns <<'EOF'
 # options: USER ID [VERIFY]
 #
 # The function for removing DDNS functionality from the DNS record.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 id=$2
 verify=${3-true}
-
 # Includes
 source $VESTA/func/main.sh
 source $VESTA/conf/vesta.conf
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '2' "$#" 'USER ID [VERIFY]'
 is_format_valid 'user' 'id'
 is_system_enabled "$DNS_SYSTEM" 'DNS_SYSTEM'
@@ -455,24 +362,17 @@ is_object_unsuspended 'user' 'USER' "$user"
 if [ "$verify" = "true" ]; then
    is_object_valid "ddns" 'ID' "$id"
 fi
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Deleting ddns from ddns conf
 sed -i "/^ID='$id'/d" $USER_DATA/ddns.conf
-
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 #Logging
 log_history "deleted ddns configuration for dns record $record_id on $domain"
 log_event "$OK" "$ARGUMENTS"
-
 exit
 EOF
 
@@ -484,21 +384,16 @@ cat > /usr/local/vesta/bin/v-get-ddns <<'EOF'
 # options: USER ID [FORMAT]
 #
 # The function for obtaining a DDNS configuration.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 id=$2
 format=${3-shell}
-
 # Includes
 source $VESTA/func/main.sh
 source $VESTA/conf/vesta.conf
-
 # JSON list function
 json_list() {
     IFS=$'\n'
@@ -523,7 +418,6 @@ json_list() {
     done < <(grep "ID='$id'" $USER_DATA/ddns.conf)
     echo '}'
 }
-
 # SHELL list function
 shell_list() {
     IFS=$'\n'
@@ -534,7 +428,6 @@ shell_list() {
         echo "$ID $DOMAIN $RECORD_ID $KEY $TIME $DATE"
     done < <(grep "ID='$id'" $USER_DATA/ddns.conf)
 }
-
 # PLAIN list function
 plain_list() {
     IFS=$'\n'
@@ -544,7 +437,6 @@ plain_list() {
         echo -e "$DATE"
     done < <(grep "ID='$id'" $USER_DATA/ddns.conf)
 }
-
 # CSV list function
 csv_list() {
     IFS=$'\n'
@@ -554,24 +446,18 @@ csv_list() {
         echo "$ID,$DOMAIN,$RECORD_ID,$KEY,$TIME,$DATE"
     done < <(grep "ID='$id'" $USER_DATA/ddns.conf)
 }
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '2' "$#" 'USER ID [FORMAT]'
 is_format_valid 'user' 'id'
 is_system_enabled "$DNS_SYSTEM" 'DNS_SYSTEM'
 is_object_valid 'user' 'USER' "$user"
 is_object_unsuspended 'user' 'USER' "$user"
 is_object_valid "ddns" 'ID' "$id"
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Listing data
 case $format in
     json)   json_list ;;
@@ -579,12 +465,9 @@ case $format in
     csv)    csv_list ;;
     shell)  shell_list |column -t ;;
 esac
-
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 exit
 EOF
 
@@ -596,29 +479,23 @@ cat > /usr/local/vesta/bin/v-get-ddns-for-dns-record <<'EOF'
 # options: USER DOMAIN ID [FORMAT] [VERIFY]
 #
 # The function for obtaining the DDNS configuration for a DNS record.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 domain=$2
 record_id=$3
 format=${4-shell}
 verify=${5-true}
-
 # Includes
 source $VESTA/func/main.sh
 source $VESTA/conf/vesta.conf
-
 # JSON list function
 json_list() {
     IFS=$'\n'
     i=1
-    objects=$(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$rr
-ecord_id'" |wc -l)
+    objects=$(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$record_id'" |wc -l)
     echo "{"
     while read str; do
         eval $str
@@ -635,11 +512,9 @@ ecord_id'" |wc -l)
             echo
         fi
         ((i++))
-    done < <(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$ree
-cord_id'" )
+    done < <(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$record_id'" )
     echo '}'
 }
-
 # SHELL list function
 shell_list() {
     IFS=$'\n'
@@ -648,10 +523,8 @@ shell_list() {
     while read str; do
         eval $str
         echo "$ID $DOMAIN $RECORD_ID $KEY $TIME $DATE"
-    done < <(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$ree
-cord_id'" )
+    done < <(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$record_id'" )
 }
-
 # PLAIN list function
 plain_list() {
     IFS=$'\n'
@@ -659,10 +532,8 @@ plain_list() {
         eval $str
         echo -ne "$ID\t$DOMAIN\t$RECORD_ID\t$KEY\t$TIME\t"
         echo -e "$DATE"
-    done < <(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$ree
-cord_id'" )
+    done < <(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$record_id'" )
 }
-
 # CSV list function
 csv_list() {
     IFS=$'\n'
@@ -670,15 +541,11 @@ csv_list() {
     while read str; do
         eval $str
         echo "$ID,$DOMAIN,$RECORD_ID,$KEY,$TIME,$DATE"
-    done < <(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$ree
-cord_id'" )
+    done < <(grep "DOMAIN='$domain'" $USER_DATA/ddns.conf | grep "RECORD_ID='$record_id'" )
 }
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '3' "$#" 'USER DOMAIN RECORD_ID [FORMAT] [VERIFY]'
 is_format_valid 'user' 'domain' 'record_id'
 is_system_enabled "$DNS_SYSTEM" 'DNS_SYSTEM'
@@ -689,12 +556,9 @@ if [ "$verify" = "true" ]; then
     is_object_unsuspended 'dns' 'DOMAIN' "$domain"
     is_object_valid "dns/$domain" 'ID' "$record_id"
 fi
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Listing data
 case $format in
     json)   json_list ;;
@@ -702,12 +566,9 @@ case $format in
     csv)    csv_list ;;
     shell)  shell_list |column -t ;;
 esac
-
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 exit
 EOF
 
@@ -719,19 +580,14 @@ cat > /usr/local/vesta/bin/v-list-ddns <<'EOF'
 # options: USER [FORMAT]
 #
 # The function for obtaining the list of all DDNS configurations for a user.
-
-
 #----------------------------------------------------------#
 #                    Variable&Function                     #
 #----------------------------------------------------------#
-
 # Argument definition
 user=$1
 format=${2-shell}
-
 # Includes
 source $VESTA/func/main.sh
-
 # JSON list function
 json_list() {
     IFS=$'\n'
@@ -756,7 +612,6 @@ json_list() {
     done < <(cat $USER_DATA/ddns.conf)
     echo '}'
 }
-
 # SHELL list function
 shell_list() {
     IFS=$'\n'
@@ -767,7 +622,6 @@ shell_list() {
         echo "$ID $DOMAIN $RECORD_ID $KEY $TIME $DATE"
     done < <(cat $USER_DATA/ddns.conf)
 }
-
 # PLAIN list function
 plain_list() {
     IFS=$'\n'
@@ -777,7 +631,6 @@ plain_list() {
         echo -e "$DATE"
     done < <(cat $USER_DATA/ddns.conf)
 }
-
 # CSV list function
 csv_list() {
     IFS=$'\n'
@@ -787,21 +640,15 @@ csv_list() {
         echo "$ID,$DOMAIN,$RECORD_ID,$KEY,$TIME,$DATE"
     done < <(cat $USER_DATA/ddns.conf)
 }
-
-
 #----------------------------------------------------------#
 #                    Verifications                         #
 #----------------------------------------------------------#
-
 check_args '1' "$#" 'USER [FORMAT]'
 is_format_valid 'user'
 is_object_valid 'user' 'USER' "$user"
-
-
 #----------------------------------------------------------#
 #                       Action                             #
 #----------------------------------------------------------#
-
 # Listing data
 case $format in
     json)   json_list ;;
@@ -809,18 +656,15 @@ case $format in
     csv)    csv_list ;;
     shell)  shell_list |column -t ;;
 esac
-
-
 #----------------------------------------------------------#
 #                       Vesta                              #
 #----------------------------------------------------------#
-
 exit
 EOF
 
 chmod +x /usr/local/vesta/bin/v-list-ddns
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/bin/v-backup-user)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/bin/v-backup-user)" ]; then
 ddnsnr=$(grep -n "# Mail domain" /usr/local/vesta/bin/v-backup-user | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-2
 let ddnsnr3=ddnsnr-3
@@ -851,7 +695,7 @@ echo "problem with v-backup-user"
 fi
 fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/bin/v-change-dns-record-id)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/bin/v-change-dns-record-id)" ]; then
 ddnsnr=$(grep -n "exit" /usr/local/vesta/bin/v-change-dns-record-id | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/bin/v-change-dns-record-id > /usr/local/vesta/bin/v-change-dns-record-id2
@@ -867,7 +711,7 @@ mv -f /usr/local/vesta/bin/v-change-dns-record-id2 /usr/local/vesta/bin/v-change
 chmod +x /usr/local/vesta/bin/v-change-dns-record-id
 fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/bin/v-change-user-package)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/bin/v-change-user-package)" ]; then
 ddnsnr=$(grep -n -E "^DNS_RECORDS=" /usr/local/vesta/bin/v-change-user-package | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/bin/v-change-user-package > /usr/local/vesta/bin/v-change-user-package2
@@ -879,7 +723,7 @@ mv -f /usr/local/vesta/bin/v-change-user-package2 /usr/local/vesta/bin/v-change-
 chmod +x /usr/local/vesta/bin/v-change-user-package
 fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/bin/v-delete-dns-record)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/bin/v-delete-dns-record)" ]; then
 ddnsnr=$(grep -n "Action" /usr/local/vesta/bin/v-delete-dns-record | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+2
 let ddnsnr3=ddnsnr+3
@@ -888,14 +732,13 @@ cat >> /usr/local/vesta/bin/v-delete-dns-record2 <<'EOF'
 # Delete related DDNS key if applicable
 ddns_id=$($BIN/v-get-ddns-for-dns-record $user $domain_idn $id plain false | cut -f1 )
 $BIN/v-delete-ddns $user $ddns_id false
-
 EOF
 tail -n+"$ddnsnr3" /usr/local/vesta/bin/v-delete-dns-record >> /usr/local/vesta/bin/v-delete-dns-record2
 mv -f /usr/local/vesta/bin/v-delete-dns-record2 /usr/local/vesta/bin/v-delete-dns-record
 chmod +x /usr/local/vesta/bin/v-delete-dns-record
 fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/bin/v-list-user-package)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/bin/v-list-user-package)" ]; then
 ddnsnr=$(grep -n "DNS_RECORDS\":" /usr/local/vesta/bin/v-list-user-package | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/bin/v-list-user-package > /usr/local/vesta/bin/v-list-user-package2
@@ -904,7 +747,6 @@ cat >> /usr/local/vesta/bin/v-list-user-package2 <<'EOF'
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/bin/v-list-user-package >> /usr/local/vesta/bin/v-list-user-package2
 mv -f /usr/local/vesta/bin/v-list-user-package2 /usr/local/vesta/bin/v-list-user-package
-
 ddnsnr=$(grep -n "DNS RECORDS: " /usr/local/vesta/bin/v-list-user-package | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/bin/v-list-user-package > /usr/local/vesta/bin/v-list-user-package2
@@ -919,7 +761,7 @@ sed -i 's/,DNS_DOMAINS,DNS_RECORDS,/,DNS_DOMAINS,DDNS_RECORDS,DNS_RECORDS,/' /us
 sed -i 's/,$DNS_DOMAINS,$DNS_RECORDS,/,$DNS_DOMAINS,$DDNS_RECORDS,$DNS_RECORDS,/' /usr/local/vesta/bin/v-list-user-package
 fi
 
-if [ ! -n "$(grep "DDNS" /usr/local/vesta/bin/v-list-user-packages)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/bin/v-list-user-packages)" ]; then
 ddnsnr=$(grep -n "DNS_RECORDS\": " /usr/local/vesta/bin/v-list-user-packages | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/bin/v-list-user-packages > /usr/local/vesta/bin/v-list-user-packages2
@@ -937,7 +779,7 @@ sed -i 's/,DNS_DOMAINS,DNS_RECORDS,/,DNS_DOMAINS,DDNS_RECORDS,DNS_RECORDS,/' /us
 sed -i 's/,$DNS_DOMAINS,$DNS_RECORDS,/,$DNS_DOMAINS,$DDNS_RECORDS,$DNS_RECORDS,/' /usr/local/vesta/bin/v-list-user-packages
 fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/bin/v-restore-user)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/bin/v-restore-user)" ]; then
 ddnsnr=$(grep -n "Restarting DNS" /usr/local/vesta/bin/v-restore-user | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/bin/v-restore-user > /usr/local/vesta/bin/v-restore-user2
@@ -961,15 +803,14 @@ cat >> /usr/local/vesta/bin/v-restore-user2 <<'EOF'
     fi
     # Restoring ddns configuration 
     cp $tmpdir/ddns/ddns.conf $USER_DATA/ddns.conf
-
 EOF
 tail -n+"$ddnsnr" /usr/local/vesta/bin/v-restore-user >> /usr/local/vesta/bin/v-restore-user2
 mv -f /usr/local/vesta/bin/v-restore-user2 /usr/local/vesta/bin/v-restore-user
 chmod +x /usr/local/vesta/bin/v-restore-user
 fi
 
+if [ -z "$(grep DDNS /usr/local/vesta/func/domain.sh)" ]; then
 cat >> /usr/local/vesta/func/domain.sh <<'EOF'
-
 #----------------------------------------------------------#
 #                        DDNS                              #
 #----------------------------------------------------------#
@@ -997,8 +838,9 @@ is_ddns_unique() {
     fi
 }
 EOF
+fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/func/main.sh)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/func/main.sh)" ]; then
 ddnsnr=$(grep -n 'DNS_RECORDS) ' /usr/local/vesta/func/main.sh | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/func/main.sh > /usr/local/vesta/func/main.sh2
@@ -1017,9 +859,8 @@ tail -n+"$ddnsnr2" /usr/local/vesta/func/main.sh >> /usr/local/vesta/func/main.s
 mv -f /usr/local/vesta/func/main.sh2 /usr/local/vesta/func/main.sh
 fi
 
-if [ ! -n "$(grep ddns /usr/local/vesta/web/css/styles.min.css)" ]; then
+if [ -z "$(grep ddns /usr/local/vesta/web/css/styles.min.css)" ]; then
 cat >> /usr/local/vesta/web/css/styles.min.css <<'EOF'
-
 .ddns-address {
   white-space: nowrap;
   overflow: auto;
@@ -1028,9 +869,8 @@ cat >> /usr/local/vesta/web/css/styles.min.css <<'EOF'
 EOF
 fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/web/inc/i18n/en.php)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/web/inc/i18n/en.php)" ]; then
 sed -i '/^);/d' /usr/local/vesta/web/inc/i18n/en.php
-
 cat >> /usr/local/vesta/web/inc/i18n/en.php <<'EOF'
     'Enable Dynamic DNS' => 'Enable Dynamic DNS',
     'Dynamic DNS Key' => 'Dynamic DNS Key',
@@ -1040,7 +880,7 @@ cat >> /usr/local/vesta/web/inc/i18n/en.php <<'EOF'
 EOF
 fi
 
-if [ ! -n "$(grep ddns /usr/local/vesta/web/js/pages/add_dns_rec.js)" ]; then
+if [ -z "$(grep ddns /usr/local/vesta/web/js/pages/add_dns_rec.js)" ]; then
 cat >> /usr/local/vesta/web/js/pages/add_dns_rec.js <<'EOF'
 //
 // Generates a random API key
@@ -1057,7 +897,7 @@ randomString = function() {
 EOF
 fi
 
-if [ ! -n "$(grep "ddns" /usr/local/vesta/web/js/pages/edit_dns_rec.js)" ]; then
+if [ -z "$(grep ddns /usr/local/vesta/web/js/pages/edit_dns_rec.js)" ]; then
 cat >> /usr/local/vesta/web/js/pages/edit_dns_rec.js <<'EOF'
 //
 //
@@ -1073,20 +913,18 @@ randomString = function() {
     document.v_edit_dns_rec.v_ddns_key.value = randomstring;
     updateDdnsUrl();
 };
-
 $(document).ready(function() {
     $('input[name=v_ddns_key]').change(function(){
         updateDdnsUrl();
     });
 });
-
 updateDdnsUrl = function () {
     $('#ddns-url').val($('#ddns-base-url').val() + $('input[name=v_ddns_key]').val());
 };
 EOF
 fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/web/add/dns/index.php)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/web/add/dns/index.php)" ]; then
 ddnsnr=$(grep -n "empty($\_POST\['v\_val'" /usr/local/vesta/web/add/dns/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/web/add/dns/index.php > /usr/local/vesta/web/add/dns/index.php2
@@ -1095,7 +933,6 @@ cat >> /usr/local/vesta/web/add/dns/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/web/add/dns/index.php >> /usr/local/vesta/web/add/dns/index.php2
 mv -f /usr/local/vesta/web/add/dns/index.php2 /usr/local/vesta/web/add/dns/index.php
-
 ddnsnr=$(grep -n "v\_domain = escapeshellarg($\_POST" /usr/local/vesta/web/add/dns/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 let ddnsnr3=ddnsnr-2
@@ -1105,7 +942,6 @@ cat >> /usr/local/vesta/web/add/dns/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/web/add/dns/index.php >> /usr/local/vesta/web/add/dns/index.php2
 mv -f /usr/local/vesta/web/add/dns/index.php2 /usr/local/vesta/web/add/dns/index.php
-
 ddnsnr=$(grep -n "v_type = $\_POST\['v_type'\]" /usr/local/vesta/web/add/dns/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+2
 let ddnsnr3=ddnsnr+3
@@ -1125,11 +961,9 @@ cat >> /usr/local/vesta/web/add/dns/index.php2 <<'EOF'
          check_return_code($return_var,$output);
          unset($output);
      }
-
 EOF
 tail -n+"$ddnsnr3" /usr/local/vesta/web/add/dns/index.php >> /usr/local/vesta/web/add/dns/index.php2
 mv -f /usr/local/vesta/web/add/dns/index.php2 /usr/local/vesta/web/add/dns/index.php
-
 ddnsnr=$(grep -n 'unset($v_priori' /usr/local/vesta/web/add/dns/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/web/add/dns/index.php > /usr/local/vesta/web/add/dns/index.php2
@@ -1141,9 +975,7 @@ tail -n+"$ddnsnr2" /usr/local/vesta/web/add/dns/index.php >> /usr/local/vesta/we
 mv -f /usr/local/vesta/web/add/dns/index.php2 /usr/local/vesta/web/add/dns/index.php
 fi
 
-
-
-if [ ! -n "$(grep DDNS /usr/local/vesta/web/add/package/index.php)" ]; then
+if [ ! -z "$(grep DDNS /usr/local/vesta/web/add/package/index.php)" ]; then
 ddnsnr=$(grep -n "v_dns_records'])) " /usr/local/vesta/web/add/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/web/add/package/index.php > /usr/local/vesta/web/add/package/index.php2
@@ -1152,7 +984,6 @@ cat >> /usr/local/vesta/web/add/package/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/web/add/package/index.php >> /usr/local/vesta/web/add/package/index.php2
 mv -f /usr/local/vesta/web/add/package/index.php2 /usr/local/vesta/web/add/package/index.php
-
 ddnsnr=$(grep -n 'arg($_POST\[.v_dns_records' /usr/local/vesta/web/add/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/web/add/package/index.php > /usr/local/vesta/web/add/package/index.php2
@@ -1161,7 +992,6 @@ cat >> /usr/local/vesta/web/add/package/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/web/add/package/index.php >> /usr/local/vesta/web/add/package/index.php2
 mv -f /usr/local/vesta/web/add/package/index.php2 /usr/local/vesta/web/add/package/index.php
-
 ddnsnr=$(grep -n '\.$v_dns_records\.' /usr/local/vesta/web/add/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/web/add/package/index.php > /usr/local/vesta/web/add/package/index.php2
@@ -1170,7 +1000,6 @@ cat >> /usr/local/vesta/web/add/package/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/web/add/package/index.php >> /usr/local/vesta/web/add/package/index.php2
 mv -f /usr/local/vesta/web/add/package/index.php2 /usr/local/vesta/web/add/package/index.php
-
 ddnsnr=$(grep -n 'mpty($v_dns_records)) $v_d' /usr/local/vesta/web/add/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/web/add/package/index.php > /usr/local/vesta/web/add/package/index.php2
@@ -1181,7 +1010,7 @@ tail -n+"$ddnsnr2" /usr/local/vesta/web/add/package/index.php >> /usr/local/vest
 mv -f /usr/local/vesta/web/add/package/index.php2 /usr/local/vesta/web/add/package/index.php
 fi
 
-if [ ! -n "$(grep DDNS /usr/local/vesta/web/edit/dns/index.php)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/web/edit/dns/index.php)" ]; then
 ddnsnr=$(grep -n "Check POST request for dns domain" /usr/local/vesta/web/edit/dns/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/web/edit/dns/index.php > /usr/local/vesta/web/edit/dns/index.php2
@@ -1199,11 +1028,9 @@ cat >> /usr/local/vesta/web/edit/dns/index.php2 <<'EOF'
         $v_ddns_key = $data[$v_ddns_id]['KEY']; 
     }
 }
-
 EOF
 tail -n+"$ddnsnr" /usr/local/vesta/web/edit/dns/index.php >> /usr/local/vesta/web/edit/dns/index.php2
 mv -f /usr/local/vesta/web/edit/dns/index.php2 /usr/local/vesta/web/edit/dns/index.php
-
 ddnsnr=$(grep -n "empty($\_POST\['save'\])) && (\!empty($\_GET\['domain'\])) && (\!empty($\_GET\['record\_id'\]))" /usr/local/vesta/web/edit/dns/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+3
 let ddnsnr3=ddnsnr+4
@@ -1229,7 +1056,6 @@ cat >> /usr/local/vesta/web/edit/dns/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr3" /usr/local/vesta/web/edit/dns/index.php >> /usr/local/vesta/web/edit/dns/index.php2
 mv -f /usr/local/vesta/web/edit/dns/index.php2 /usr/local/vesta/web/edit/dns/index.php
-
 ddnsnr=$(grep -n 'VESTA_CMD."v-change-dns-record-id ".$v_username' /usr/local/vesta/web/edit/dns/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+5
 let ddnsnr3=ddnsnr+6
@@ -1262,8 +1088,7 @@ tail -n+"$ddnsnr3" /usr/local/vesta/web/edit/dns/index.php >> /usr/local/vesta/w
 mv -f /usr/local/vesta/web/edit/dns/index.php2 /usr/local/vesta/web/edit/dns/index.php
 fi
 
-
-if [ ! -n "$(grep DDNS /usr/local/vesta/web/edit/package/index.php)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/web/edit/package/index.php)" ]; then
 ddnsnr=$(grep -n '$v_dns_records = $data' /usr/local/vesta/web/edit/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/web/edit/package/index.php > /usr/local/vesta/web/edit/package/index.php2
@@ -1272,7 +1097,6 @@ $v_ddns_records = $data[$v_package]['DDNS_RECORDS'];
 EOF
 tail -n+"$ddnsnr" /usr/local/vesta/web/edit/package/index.php >> /usr/local/vesta/web/edit/package/index.php2
 mv -f /usr/local/vesta/web/edit/package/index.php2 /usr/local/vesta/web/edit/package/index.php
-
 ddnsnr=$(grep -n "v_dns_records'\])) \$err" /usr/local/vesta/web/edit/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/web/edit/package/index.php > /usr/local/vesta/web/edit/package/index.php2
@@ -1281,7 +1105,6 @@ cat >> /usr/local/vesta/web/edit/package/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr" /usr/local/vesta/web/edit/package/index.php >> /usr/local/vesta/web/edit/package/index.php2
 mv -f /usr/local/vesta/web/edit/package/index.php2 /usr/local/vesta/web/edit/package/index.php
-
 ddnsnr=$(grep -n "llarg($\_POST\['v_dns_rec" /usr/local/vesta/web/edit/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/web/edit/package/index.php > /usr/local/vesta/web/edit/package/index.php2
@@ -1290,7 +1113,6 @@ cat >> /usr/local/vesta/web/edit/package/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr" /usr/local/vesta/web/edit/package/index.php >> /usr/local/vesta/web/edit/package/index.php2
 mv -f /usr/local/vesta/web/edit/package/index.php2 /usr/local/vesta/web/edit/package/index.php
-
 ddnsnr=$(grep -n '\.$v_dns_records\.' /usr/local/vesta/web/edit/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/web/edit/package/index.php > /usr/local/vesta/web/edit/package/index.php2
@@ -1301,7 +1123,7 @@ tail -n+"$ddnsnr" /usr/local/vesta/web/edit/package/index.php >> /usr/local/vest
 mv -f /usr/local/vesta/web/edit/package/index.php2 /usr/local/vesta/web/edit/package/index.php
 fi
 
-if [ ! -n "$(grep ddns /usr/local/vesta/web/templates/admin/add_dns_rec.html)" ]; then
+if [ -z "$(grep ddns /usr/local/vesta/web/templates/admin/add_dns_rec.html)" ]; then
 ddnsnr=$(grep -n '<table class="data-col2">' /usr/local/vesta/web/templates/admin/add_dns_rec.html | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-4
 let ddnsnr3=ddnsnr-5
@@ -1355,7 +1177,7 @@ tail -n+"$ddnsnr2" /usr/local/vesta/web/templates/admin/add_dns_rec.html >> /usr
 mv -f /usr/local/vesta/web/templates/admin/add_dns_rec.html2 /usr/local/vesta/web/templates/admin/add_dns_rec.html
 fi
 
-if [ ! -n "$(grep ddns /usr/local/vesta/web/templates/admin/add_package.html)" ]; then
+if [ -z "$(grep ddns /usr/local/vesta/web/templates/admin/add_package.html)" ]; then
 ddnsnr=$(grep -n "php print __('Mail Domains" /usr/local/vesta/web/templates/admin/add_package.html | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/web/templates/admin/add_package.html > /usr/local/vesta/web/templates/admin/add_package.html2
@@ -1376,7 +1198,7 @@ tail -n+"$ddnsnr" /usr/local/vesta/web/templates/admin/add_package.html >> /usr/
 mv -f /usr/local/vesta/web/templates/admin/add_package.html2 /usr/local/vesta/web/templates/admin/add_package.html
 fi
 
-if [ ! -n "$(grep ddns /usr/local/vesta/web/templates/admin/edit_dns_rec.html)" ]; then
+if [ -z "$(grep ddns /usr/local/vesta/web/templates/admin/edit_dns_rec.html)" ]; then
 ddnsnr=$(grep -n '<table class="data-col2">' /usr/local/vesta/web/templates/admin/edit_dns_rec.html | sed -n '2p' | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-4
 let ddnsnr3=ddnsnr-5
@@ -1431,7 +1253,7 @@ tail -n+"$ddnsnr2" /usr/local/vesta/web/templates/admin/edit_dns_rec.html >> /us
 mv -f /usr/local/vesta/web/templates/admin/edit_dns_rec.html2 /usr/local/vesta/web/templates/admin/edit_dns_rec.html
 fi
 
-if [ ! -n "$(grep ddns /usr/local/vesta/web/templates/admin/edit_package.html)" ]; then
+if [ -z "$(grep ddns /usr/local/vesta/web/templates/admin/edit_package.html)" ]; then
 ddnsnr=$(grep -n "php print __('Mail Domains" /usr/local/vesta/web/templates/admin/edit_package.html | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr-1
 head -n $ddnsnr2 /usr/local/vesta/web/templates/admin/edit_package.html > /usr/local/vesta/web/templates/admin/edit_package.html2
@@ -1452,7 +1274,7 @@ tail -n+"$ddnsnr" /usr/local/vesta/web/templates/admin/edit_package.html >> /usr
 mv -f /usr/local/vesta/web/templates/admin/edit_package.html2 /usr/local/vesta/web/templates/admin/edit_package.html
 fi
 
-if [ ! -n "$(grep ddns /usr/local/vesta/web/templates/admin/list_packages.html)" ]; then
+if [ -z "$(grep ddns /usr/local/vesta/web/templates/admin/list_packages.html)" ]; then
 ddnsnr=$(grep -n "data\[\$key\]\['DNS_TEMPLATE'\]?>" /usr/local/vesta/web/templates/admin/list_packages.html | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/web/templates/admin/list_packages.html > /usr/local/vesta/web/templates/admin/list_packages.html2
@@ -1474,15 +1296,12 @@ cat > /usr/local/vesta/web/ddns/index.php <<'EOF'
 <?php
 // Main include
 include($_SERVER['DOCUMENT_ROOT']."/api/index.php");
-
 // Display debugger information
 $debugger = false;
-
 if (!empty($_GET['debug']) || !empty($_POST['debug'])) {
     $debugger = true;
     echo "<pre>";
 }
-
 // Refuse connections that are not running on HTTPS
 if ((empty($_SERVER['HTTPS'])) || ($_SERVER['HTTPS'] == 'off')) {
     if ($debugger) {
@@ -1490,7 +1309,6 @@ if ((empty($_SERVER['HTTPS'])) || ($_SERVER['HTTPS'] == 'off')) {
     }
     die();
 }
-
 // Retrieve and sanatize incoming POST variables
 if (!empty($_POST['user']) && !empty($_POST['id']) && !empty($_POST['key'])) {
     $user = escapeshellarg($_POST['user']);
@@ -1503,7 +1321,6 @@ if (!empty($_POST['user']) && !empty($_POST['id']) && !empty($_POST['key'])) {
     $id = escapeshellarg($_GET['id']);
     $key = escapeshellarg($_GET['key']);
 }
-
 // Verify all fields are completed
 if (empty($user) || empty($id) || empty($key)) {
     if ($debugger) {
@@ -1511,12 +1328,10 @@ if (empty($user) || empty($id) || empty($key)) {
     }
     die();
 }
-
 // Authenticate API key
 exec (VESTA_CMD."v-authenticate-ddns-key ".$user." ".$id." ".$key." json", $output, $return_var);
 $data = json_decode(implode('', $output), true);
 unset($output);
-
 // Verify successful authentication
 if (!$data) {
     if ($debugger) {
@@ -1524,30 +1339,24 @@ if (!$data) {
     }
     die();
 }
-
 // Get DDNS id.
 $id = escapeshellarg(key($data));
-
 // Get IP address of remote system
 $ip_address = $_SERVER['REMOTE_ADDR'];
 if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
     $ip_address = array_pop(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']));
 }
-
 // Sanatize variables
 $new_ip = escapeshellarg($ip_address);
-
 // Change DNS record
 exec (VESTA_CMD."v-change-dns-record-by-ddns ".$user." ". $id ." ".$new_ip, $output, $return_var);
 if ($debugger) {
     print_r($output);
 }
 unset($output);
-
 // Output success message.
 if ($debugger) {
     echo 'Complete! Attempted to set set record to ip address: ' . $new_ip;
     echo '</pre>';
 }
 EOF
-

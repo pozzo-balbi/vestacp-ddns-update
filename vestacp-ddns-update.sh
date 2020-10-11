@@ -975,7 +975,7 @@ tail -n+"$ddnsnr2" /usr/local/vesta/web/add/dns/index.php >> /usr/local/vesta/we
 mv -f /usr/local/vesta/web/add/dns/index.php2 /usr/local/vesta/web/add/dns/index.php
 fi
 
-if [ ! -z "$(grep DDNS /usr/local/vesta/web/add/package/index.php)" ]; then
+if [ -z "$(grep DDNS /usr/local/vesta/web/add/package/index.php)" ]; then
 ddnsnr=$(grep -n "v_dns_records'])) " /usr/local/vesta/web/add/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
 head -n $ddnsnr /usr/local/vesta/web/add/package/index.php > /usr/local/vesta/web/add/package/index.php2

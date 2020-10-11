@@ -1292,6 +1292,7 @@ tail -n+"$ddnsnr2" /usr/local/vesta/web/templates/admin/list_packages.html >> /u
 mv -f /usr/local/vesta/web/templates/admin/list_packages.html2 /usr/local/vesta/web/templates/admin/list_packages.html
 fi
 
+if [ ! -f "/usr/local/vesta/web/ddns/index.php" ]; then
 cat > /usr/local/vesta/web/ddns/index.php <<'EOF'
 <?php
 // Main include
@@ -1360,3 +1361,4 @@ if ($debugger) {
     echo '</pre>';
 }
 EOF
+fi

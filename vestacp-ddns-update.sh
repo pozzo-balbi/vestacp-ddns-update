@@ -1307,7 +1307,7 @@ if ((empty($_SERVER['HTTPS'])) || ($_SERVER['HTTPS'] == 'off')) {
     if ($debugger) {
         echo "HTTPS is required to use this API.";
     }
-    die();
+    die('https required');
 }
 // Retrieve and sanatize incoming POST variables
 if (!empty($_POST['user']) && !empty($_POST['id']) && !empty($_POST['key'])) {

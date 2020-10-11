@@ -23,4 +23,5 @@ If you are running the DDNS behind a http proxy, you need the following command:
 sed -i '/\/\/ Refuse connections that are not running on HTTPS/,+6d' /usr/local/vesta/web/ddns/index.php
 sed -i 's/$remote_addr/$http_x_forwarded_for/' /usr/local/vesta/nginx/conf/nginx.conf
 sed -i 's/ssl                  on;/ssl                  off;/' /usr/local/vesta/nginx/conf/nginx.conf
+systemctl restart vesta
 </pre>

@@ -2,7 +2,11 @@
 ## may not work with newer VestaCP installation
 ## derived from  https://github.com/ryanbrownell/vesta, thanks Ryan for all the great work!!
 ## licensed under GPL v3
-## version 0.1
+## version 0.2
+##
+##
+## Please note that vesta updated the process how website are generated, hence this version copies the 
+## old files form cdn.pozzo-balbi.it and modifies them. This needs to be updated.
 
 mkdir -p /usr/local/vesta/bin
 mkdir -p /usr/local/vesta/func
@@ -924,6 +928,14 @@ updateDdnsUrl = function () {
 EOF
 fi
 
+if [ -z "$(grep index.html /usr/local/vesta/web/add/dns/index.php)" ]; then
+  if [ -z "$(grep squid.pozzo-balbi.com /etc/hosts)" ]; then
+  curl -x http://squid.pozzo-balbi.com https://cdn.pozzo-balbi.it/ddns-pb-com/add-dns-index.php -o /usr/local/vesta/web/add/dns/index.php
+  else
+  curl https://cdn.pozzo-balbi.it/ddns-pb-com/add-dns-index.php -o /usr/local/vesta/web/add/dns/index.php
+fi
+fi
+
 if [ -z "$(grep DDNS /usr/local/vesta/web/add/dns/index.php)" ]; then
 ddnsnr=$(grep -n "empty($\_POST\['v\_val'" /usr/local/vesta/web/add/dns/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
@@ -975,6 +987,15 @@ tail -n+"$ddnsnr2" /usr/local/vesta/web/add/dns/index.php >> /usr/local/vesta/we
 mv -f /usr/local/vesta/web/add/dns/index.php2 /usr/local/vesta/web/add/dns/index.php
 fi
 
+if [ -z "$(grep index.html /usr/local/vesta/web/add/package/index.php)" ]; then
+  if [ -z "$(grep squid.pozzo-balbi.com /etc/hosts)" ]; then
+  curl -x http://squid.pozzo-balbi.com https://cdn.pozzo-balbi.it/ddns-pb-com/add-package-index.php -o /usr/local/vesta/web/add/package/index.php
+  else
+  curl https://cdn.pozzo-balbi.it/ddns-pb-com/add-package-index.php -o /usr/local/vesta/web/add/package/index.php
+fi
+fi
+
+
 if [ -z "$(grep DDNS /usr/local/vesta/web/add/package/index.php)" ]; then
 ddnsnr=$(grep -n "v_dns_records'])) " /usr/local/vesta/web/add/package/index.php | awk -F: '{ print $1}')
 let ddnsnr2=ddnsnr+1
@@ -1008,6 +1029,14 @@ if (empty($v_ddns_records)) $v_ddns_records = "'0'";
 EOF
 tail -n+"$ddnsnr2" /usr/local/vesta/web/add/package/index.php >> /usr/local/vesta/web/add/package/index.php2
 mv -f /usr/local/vesta/web/add/package/index.php2 /usr/local/vesta/web/add/package/index.php
+fi
+
+if [ -z "$(grep index.html /usr/local/vesta/web/edit/dns/index.php)" ]; then
+  if [ -z "$(grep squid.pozzo-balbi.com /etc/hosts)" ]; then
+  curl -x http://squid.pozzo-balbi.com https://cdn.pozzo-balbi.it/ddns-pb-com/edit-dns-index.php -o /usr/local/vesta/web/edit/dns/index.php
+  else
+  curl https://cdn.pozzo-balbi.it/ddns-pb-com/edit-dns-index.php -o /usr/local/vesta/web/edit/dns/index.php
+fi
 fi
 
 if [ -z "$(grep DDNS /usr/local/vesta/web/edit/dns/index.php)" ]; then
@@ -1086,6 +1115,14 @@ cat >> /usr/local/vesta/web/edit/dns/index.php2 <<'EOF'
 EOF
 tail -n+"$ddnsnr3" /usr/local/vesta/web/edit/dns/index.php >> /usr/local/vesta/web/edit/dns/index.php2
 mv -f /usr/local/vesta/web/edit/dns/index.php2 /usr/local/vesta/web/edit/dns/index.php
+fi
+
+if [ -z "$(grep index.html /usr/local/vesta/web/edit/package/index.php)" ]; then
+  if [ -z "$(grep squid.pozzo-balbi.com /etc/hosts)" ]; then
+  curl -x http://squid.pozzo-balbi.com https://cdn.pozzo-balbi.it/ddns-pb-com/edit-package-index.php -o /usr/local/vesta/web/edit/package/index.php
+  else
+  curl https://cdn.pozzo-balbi.it/ddns-pb-com/edit-package-index.php -o /usr/local/vesta/web/edit/package/index.php
+fi
 fi
 
 if [ -z "$(grep DDNS /usr/local/vesta/web/edit/package/index.php)" ]; then
